@@ -42,7 +42,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden">
       {/* Animated background gradients */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -66,13 +66,12 @@ const Login = () => {
         {/* Logo/Title */}
         <motion.div variants={itemVariants} className="mb-8 text-center">
           <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="mb-4"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="w-20 h-20 mx-auto mb-4"
           >
-            <div className="w-14 h-14 mx-auto bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">RP</span>
-            </div>
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow" />
           </motion.div>
           <h1 className="text-3xl font-bold gradient-text mb-2">RailPool</h1>
           <p className="text-dark-400">Welcome back</p>
@@ -164,7 +163,7 @@ const Login = () => {
               <div className="w-full border-t border-dark-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-dark-900 text-dark-500">New to RailPool?</span>
+              <span className="px-3 bg-white dark:bg-dark-900 text-gray-500 dark:text-dark-500">New to RailPool?</span>
             </div>
           </motion.div>
 

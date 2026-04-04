@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search as SearchIcon, Train, MapPin, Calendar, Loader, ArrowRight, ChevronLeft } from 'lucide-react';
 import { rideAPI } from '../services/api';
+import SpotlightCard from '../components/SpotlightCard';
+import ShinyText from '../components/ShinyText';
 
 const Search = () => {
   const [searchType, setSearchType] = useState('manual');
@@ -67,7 +69,7 @@ const Search = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950">
+    <div className="min-h-screen">
       {/* Navigation */}
       <nav className="glass backdrop-blur-xl border-b border-dark-800/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -79,7 +81,7 @@ const Search = () => {
             <ChevronLeft className="w-5 h-5" />
             <span>Back to Dashboard</span>
           </motion.button>
-          <h1 className="text-xl font-bold gradient-text">RailPool Search</h1>
+          <ShinyText text="RailPool Search" className="text-xl font-bold" />
           <div className="w-20" />
         </div>
       </nav>
@@ -91,7 +93,7 @@ const Search = () => {
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
         {/* Main Card */}
-        <motion.div variants={itemVariants} className="card max-w-2xl mx-auto">
+        <SpotlightCard className="max-w-2xl mx-auto p-8 border-none">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-2">Find Riders to Share Your Journey</h2>
             <p className="text-dark-400">Search for trains and find people heading your direction</p>
@@ -100,7 +102,7 @@ const Search = () => {
           {/* Type Selection Tabs */}
           <motion.div
             variants={itemVariants}
-            className="flex gap-3 mb-8 p-1 bg-dark-800/50 rounded-lg w-fit"
+            className="flex gap-3 mb-8 p-1 bg-gray-100 dark:bg-dark-800/50 rounded-lg w-fit"
           >
             {[
               { value: 'train', label: 'Search by Train', icon: Train },
@@ -112,7 +114,7 @@ const Search = () => {
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   searchType === tab.value
                     ? 'bg-primary-500 text-white shadow-glow'
-                    : 'text-dark-300 hover:text-white'
+                    : 'text-gray-500 dark:text-dark-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -217,7 +219,7 @@ const Search = () => {
               {error}
             </motion.div>
           )}
-        </motion.div>
+        </SpotlightCard>
 
         {/* Results Section */}
         {searched && (
@@ -263,12 +265,7 @@ const Search = () => {
 
 const TrainCard = ({ train, idx, onSelect }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.1 }}
-      className="card-hover group"
-    >
+    <SpotlightCard index={idx} className="group p-6">
       <div className="mb-4">
         <h4 className="text-lg font-semibold">{train.train_name}</h4>
         <p className="text-sm text-dark-400">Train #{train.train_number}</p>
@@ -294,7 +291,7 @@ const TrainCard = ({ train, idx, onSelect }) => {
         Find Matches
         <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
       </motion.button>
-    </motion.div>
+    </SpotlightCard>
   );
 };
 

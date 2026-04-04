@@ -1,3 +1,11 @@
+export const PREDEFINED_DESTINATIONS = [
+  { name: 'Airport T1', lat: 28.5562, lng: 77.1199 },
+  { name: 'Connaught Place', lat: 28.6292, lng: 77.1896 },
+  { name: 'Sector 62 Noida', lat: 28.5862, lng: 77.3912 },
+  { name: 'Gurgaon Mall', lat: 28.4595, lng: 77.0266 },
+  { name: 'Airport T2', lat: 28.5520, lng: 77.1167 },
+];
+
 // Haversine formula to calculate distance
 export const calculateDistance = (lat1, lng1, lat2, lng2) => {
   const R = 6371; // Earth's radius in km

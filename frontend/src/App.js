@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Login from './pages/Login';
@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Search from './pages/Search';
 import Results from './pages/Results';
 import Chat from './pages/Chat';
+import Navbar from './components/Navbar';
+import Contact from './pages/Contact';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -21,11 +23,13 @@ const ProtectedRoute = ({ children }) => {
 
 const App = () => {
   return (
-    <div className="min-h-screen bg-dark-950">
+    <div className="min-h-screen">
       <BrowserRouter>
+        <Navbar />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/contact" element={<Contact />} />
           <Route
             path="/dashboard"
             element={

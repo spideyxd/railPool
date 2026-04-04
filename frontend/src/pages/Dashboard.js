@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Plus, LogOut, Check, X, MessageSquare, MapPin, Clock, Users, AlertCircle, Loader } from 'lucide-react';
+import { Plus, MapPin, Users, AlertCircle, Loader, Clock, MessageSquare, Check, X } from 'lucide-react';
 import { rideAPI, requestAPI } from '../services/api';
+import { PREDEFINED_DESTINATIONS } from '../utils/helpers';
+import SpotlightCard from '../components/SpotlightCard';
+import ShinyText from '../components/ShinyText';
+import StoryAnimation from '../components/StoryAnimation';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('create');
@@ -10,13 +14,12 @@ const Dashboard = () => {
   const [myRequests, setMyRequests] = useState({ sent: [], received: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     if (activeTab !== 'create') {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const loadData = async () => {
@@ -40,12 +43,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   const handleDeactivate = async (id) => {
     try {
       await rideAPI.deactivateIntent(id);
@@ -61,47 +58,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950">
-      {/* Navigation Bar */}
-      <nav className="glass backdrop-blur-xl border-b border-dark-800/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
-          >
-            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">RP</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">RailPool</h1>
-              <p className="text-xs text-dark-400">Welcome, {user.name}</p>
-            </div>
-          </motion.div>
-
-          <div className="flex items-center gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/search')}
-              className="btn-primary gap-2 flex items-center"
-            >
-              <Search className="w-4 h-4" />
-              <span>Search Rides</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              className="btn-secondary gap-2 flex items-center"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </motion.button>
-          </div>
-        </div>
-      </nav>
-
+    <div className="w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
         <motion.div
@@ -117,11 +74,11 @@ const Dashboard = () => {
             <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-glow'
-                  : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-              }`}
+                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-glow'
+                    : 'bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-dark-300 hover:bg-gray-200 dark:hover:bg-dark-700'
+                }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -189,7 +146,21 @@ const CreateRideForm = ({ onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'destination_name') {
+      const selected = PREDEFINED_DESTINATIONS.find(d => d.name === value);
+      if (selected) {
+        setFormData(prev => ({
+          ...prev,
+          destination_name: selected.name,
+          destination_lat: selected.lat.toString(),
+          destination_lng: selected.lng.toString()
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -236,8 +207,8 @@ const CreateRideForm = ({ onSuccess }) => {
       className="grid md:grid-cols-2 gap-8"
     >
       {/* Form */}
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6">Create Ride Intent</h2>
+      <SpotlightCard className="p-6">
+        <ShinyText text="Create Ride Intent" className="text-2xl font-bold mb-6 block" />
 
         {error && (
           <motion.div
@@ -303,46 +274,19 @@ const CreateRideForm = ({ onSuccess }) => {
 
           {/* Destination */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Destination Name</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium">Destination</label>
+            <select
               name="destination_name"
               value={formData.destination_name}
               onChange={handleChange}
               required
-              placeholder="e.g., Airport T1"
               className="input-field"
-            />
-          </div>
-
-          {/* Coordinates */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Latitude</label>
-              <input
-                type="number"
-                name="destination_lat"
-                value={formData.destination_lat}
-                onChange={handleChange}
-                required
-                step="0.0001"
-                placeholder="28.5562"
-                className="input-field"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Longitude</label>
-              <input
-                type="number"
-                name="destination_lng"
-                value={formData.destination_lng}
-                onChange={handleChange}
-                required
-                step="0.0001"
-                placeholder="77.1199"
-                className="input-field"
-              />
-            </div>
+            >
+              <option value="" disabled>Select a destination</option>
+              {PREDEFINED_DESTINATIONS.map(dest => (
+                <option key={dest.name} value={dest.name}>{dest.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Seats */}
@@ -383,7 +327,7 @@ const CreateRideForm = ({ onSuccess }) => {
             )}
           </motion.button>
         </form>
-      </div>
+      </SpotlightCard>
 
       {/* Info Card */}
       <motion.div
@@ -392,16 +336,18 @@ const CreateRideForm = ({ onSuccess }) => {
         transition={{ delay: 0.1 }}
         className="space-y-6"
       >
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">🚆 Getting Started</h3>
-          <ul className="space-y-3 text-sm text-dark-300">
+        <div className="card flex flex-col">
+          <h3 className="text-lg font-semibold mb-6">🚆 How RailPool Works</h3>
+          <StoryAnimation />
+          <div className="mt-8">
+            <ul className="space-y-3 text-sm text-gray-600 dark:text-dark-300">
             <li className="flex gap-3">
               <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">1</span>
               <span>Fill in your train station and arrival time</span>
             </li>
             <li className="flex gap-3">
               <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">2</span>
-              <span>Enter your destination details with coordinates</span>
+              <span>Select your destination from the popular hubs</span>
             </li>
             <li className="flex gap-3">
               <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">3</span>
@@ -411,12 +357,13 @@ const CreateRideForm = ({ onSuccess }) => {
               <span className="w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">4</span>
               <span>Wait for matches or browse all intents</span>
             </li>
-          </ul>
+            </ul>
+          </div>
         </div>
 
         <div className="card border-primary-500/30 bg-primary-500/5">
-          <p className="text-sm text-dark-300">
-            <strong className="text-primary-400">💡 Tip:</strong> Use accurate coordinates to get better matches with other riders.
+          <p className="text-sm text-gray-700 dark:text-dark-300">
+            <strong className="text-primary-600 dark:text-primary-400">💡 Tip:</strong> Let us calculate the coordinates for you to ensure accurate matches.
           </p>
         </div>
       </motion.div>
@@ -449,13 +396,7 @@ const RideIntentsList = ({ intents, loading, onDeactivate }) => {
   return (
     <motion.div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {intents.map((intent, idx) => (
-        <motion.div
-          key={intent.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          className="card-hover group"
-        >
+        <SpotlightCard key={intent.id} index={idx} className="group p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -476,12 +417,12 @@ const RideIntentsList = ({ intents, loading, onDeactivate }) => {
 
           {/* Details */}
           <div className="space-y-3 mb-5">
-            <div className="flex items-center gap-3 text-sm text-dark-300">
-              <Clock className="w-4 h-4 text-primary-400" />
+            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dark-300">
+              <Clock className="w-4 h-4 text-primary-500 dark:text-primary-400" />
               <span>{new Date(intent.arrival_time).toLocaleString()}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-dark-300">
-              <Users className="w-4 h-4 text-primary-400" />
+            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dark-300">
+              <Users className="w-4 h-4 text-primary-500 dark:text-primary-400" />
               <span>
                 {intent.intent_type === 'offering'
                   ? `${intent.seats_available} seats available`
@@ -508,7 +449,7 @@ const RideIntentsList = ({ intents, loading, onDeactivate }) => {
               Deactivate
             </motion.button>
           )}
-        </motion.div>
+        </SpotlightCard>
       ))}
     </motion.div>
   );
@@ -593,12 +534,7 @@ const RequestsList = ({ requests, loading, onUpdate }) => {
 
 const RequestCard = ({ request, idx, isSent, onRespond, onChat }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.1 }}
-      className="card-hover"
-    >
+    <SpotlightCard index={idx} className="p-6 text-left">
       <div className="flex items-center justify-between mb-4">
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
           request.status === 'pending'
@@ -647,7 +583,7 @@ const RequestCard = ({ request, idx, isSent, onRespond, onChat }) => {
           </motion.button>
         )}
       </div>
-    </motion.div>
+    </SpotlightCard>
   );
 };
 

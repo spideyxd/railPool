@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Navigation, Phone, Star, Loader, ArrowRight, ChevronLeft, AlertCircle, Users } from 'lucide-react';
 import { rideAPI, requestAPI } from '../services/api';
-import { formatDateTime, calculateDistance } from '../utils/helpers';
+import { formatDateTime, PREDEFINED_DESTINATIONS } from '../utils/helpers';
 
 const Results = () => {
   const location = useLocation();
@@ -68,29 +68,19 @@ const Results = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950">
-      {/* Navigation */}
-      <nav className="glass backdrop-blur-xl border-b border-dark-800/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+    <div className="w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
           <motion.button
             onClick={() => navigate('/search')}
-            className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             whileHover={{ x: -5 }}
           >
             <ChevronLeft className="w-5 h-5" />
             <span>Back to Search</span>
           </motion.button>
           <h1 className="text-xl font-bold gradient-text">Find Matches</h1>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="btn-secondary px-3 py-1.5 text-sm"
-          >
-            Dashboard
-          </button>
         </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -118,47 +108,30 @@ const Results = () => {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">Destination Name</label>
+                  <label className="block text-sm font-medium">Destination</label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-dark-500 pointer-events-none" />
-                    <input
-                      type="text"
+                    <select
                       value={destination.name}
-                      onChange={(e) =>
-                        setDestination((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                      placeholder="e.g., Airport T1"
-                      className="input-field pl-10 h-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-dark-400">Latitude</label>
-                    <input
-                      type="number"
-                      value={destination.lat}
-                      onChange={(e) =>
-                        setDestination((prev) => ({ ...prev, lat: e.target.value }))
-                      }
-                      step="0.0001"
-                      placeholder="28.5562"
-                      className="input-field text-sm h-10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-dark-400">Longitude</label>
-                    <input
-                      type="number"
-                      value={destination.lng}
-                      onChange={(e) =>
-                        setDestination((prev) => ({ ...prev, lng: e.target.value }))
-                      }
-                      step="0.0001"
-                      placeholder="77.1199"
-                      className="input-field text-sm h-10"
-                    />
+                      onChange={(e) => {
+                        const selected = PREDEFINED_DESTINATIONS.find(d => d.name === e.target.value);
+                        if (selected) {
+                          setDestination({
+                            name: selected.name,
+                            lat: selected.lat.toString(),
+                            lng: selected.lng.toString()
+                          });
+                        } else {
+                          setDestination(prev => ({ ...prev, name: e.target.value }));
+                        }
+                      }}
+                      className="input-field pl-10 h-10 w-full"
+                    >
+                      <option value="" disabled>Select a destination</option>
+                      {PREDEFINED_DESTINATIONS.map(dest => (
+                        <option key={dest.name} value={dest.name}>{dest.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

@@ -20,6 +20,7 @@ const Chat = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     setCurrentUser(user);
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestId]);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ const Chat = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
@@ -73,7 +74,7 @@ const Chat = () => {
   const isAccepted = requestDetails?.request.status === 'accepted';
 
   return (
-    <div className="flex flex-col h-screen bg-dark-950">
+    <div className="flex flex-col h-screen bg-white dark:bg-dark-950 transition-colors">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -84,7 +85,7 @@ const Chat = () => {
           <div className="flex items-center gap-3">
             <motion.button
               onClick={() => navigate('/dashboard')}
-              className="text-dark-400 hover:text-white transition-colors -ml-2"
+              className="text-gray-500 hover:text-gray-900 dark:text-dark-400 dark:hover:text-white transition-colors -ml-2"
               whileHover={{ x: -3 }}
             >
               <ChevronLeft className="w-6 h-6" />
@@ -133,7 +134,7 @@ const Chat = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="h-full flex flex-col items-center justify-center text-center py-12"
           >
-            <div className="w-16 h-16 rounded-full bg-dark-800/50 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-dark-800/50 flex items-center justify-center mb-4">
               <MessageSquare className="w-8 h-8 text-dark-600" />
             </div>
             <p className="text-dark-400 mb-2">No messages yet</p>
@@ -157,7 +158,7 @@ const Chat = () => {
                     className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
                       isSent
                         ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-br-none'
-                        : 'bg-dark-800 text-dark-100 border border-dark-700 rounded-bl-none'
+                        : 'bg-gray-100 dark:bg-dark-800 text-gray-900 dark:text-dark-100 border border-gray-200 dark:border-dark-700 rounded-bl-none'
                     }`}
                   >
                     <p className="break-words text-sm">{msg.content}</p>
