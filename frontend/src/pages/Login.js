@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Loader } from 'lucide-react';
 import { authAPI } from '../services/api';
+import ShaderBackground from '../components/ShaderBackground';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -42,20 +44,21 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 overflow-hidden">
-      {/* Animated background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute top-20 left-20 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute bottom-20 right-20 w-72 h-72 bg-accent-500/10 rounded-full blur-3xl"
-        />
-      </div>
+    <ShaderBackground intensity={1.0} opacity={0.3} blendMode="screen" showDebug={true}>
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 overflow-hidden">
+        {/* Animated background gradients */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
+            transition={{ duration: 20, repeat: Infinity }}
+            className="absolute top-20 left-20 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl"
+          />
+          <motion.div
+            animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
+            transition={{ duration: 15, repeat: Infinity }}
+            className="absolute bottom-20 right-20 w-72 h-72 bg-accent-500/10 rounded-full blur-3xl"
+          />
+        </div>
 
       <motion.div
         initial="hidden"
@@ -164,6 +167,21 @@ const Login = () => {
               <div className="w-full border-t border-dark-700" />
             </div>
             <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-dark-900 text-dark-500">Or continue with</span>
+            </div>
+          </motion.div>
+
+          {/* Google Login Button */}
+          <motion.div variants={itemVariants} className="flex justify-center py-2">
+            <GoogleLoginButton size="large" />
+          </motion.div>
+
+          {/* Divider */}
+          <motion.div variants={itemVariants} className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-dark-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
               <span className="px-3 bg-dark-900 text-dark-500">New to RailPool?</span>
             </div>
           </motion.div>
@@ -187,6 +205,7 @@ const Login = () => {
         </motion.div>
       </motion.div>
     </div>
+    </ShaderBackground>
   );
 };
 

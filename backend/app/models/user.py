@@ -8,11 +8,17 @@ class User(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)  # Nullable for OAuth users
     name = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     gender = db.Column(db.String(10), nullable=True)
     rating = db.Column(db.Float, default=5.0)
+    
+    # OAuth fields
+    google_id = db.Column(db.String(255), unique=True, nullable=True, index=True)
+    avatar_url = db.Column(db.String(500), nullable=True)
+    oauth_provider = db.Column(db.String(50), nullable=True)  # 'google', 'github', etc
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -41,5 +47,7 @@ class User(db.Model):
             'phone': self.phone,
             'gender': self.gender,
             'rating': self.rating,
+            'avatar_url': self.avatar_url,
+            'oauth_provider': self.oauth_provider,
             'created_at': self.created_at.isoformat()
         }
