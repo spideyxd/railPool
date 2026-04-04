@@ -1,0 +1,9 @@
+{
+  "short_name": "RailPool",
+  "name": "RailPool - Cab Pooling for Train Passengers",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#ffffff"
+}
