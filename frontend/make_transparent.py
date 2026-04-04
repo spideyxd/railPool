@@ -1,25 +1,15 @@
 import os
-from PIL import Image
+from PIL import Image, ImageDraw  # type: ignore
 
 def process_image(input_path, output_path):
     img = Image.open(input_path).convert("RGBA")
-    datas = img.getdata()
-    
-    threshold = 240
-    newData = []
-    for item in datas:
-        if item[0] >= threshold and item[1] >= threshold and item[2] >= threshold:
-            newData.append((255, 255, 255, 0))
-        else:
-            newData.append(item)
-            
-    img.putdata(newData)
+    ImageDraw.floodfill(img, (0, 0), (255, 255, 255, 0), thresh=25)
     
     # Scale down a bit keeping ratio for better web optimization
     base_width = 400
     wpercent = (base_width / float(img.size[0]))
     hsize = int((float(img.size[1]) * float(wpercent)))
-    img = img.resize((base_width, hsize), Image.LANCZOS)
+    img = img.resize((base_width, hsize), Image.Resampling.LANCZOS)
     
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     img.save(output_path, "PNG")

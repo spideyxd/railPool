@@ -232,18 +232,7 @@ const CreateRideForm = ({ onSuccess }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Intent Type */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">I am...</label>
-            <select
-              name="intent_type"
-              value={formData.intent_type}
-              onChange={handleChange}
-              className="input-field"
-            >
-              <option value="seeking">Seeking a ride (looking for driver)</option>
-              <option value="offering">Offering a ride (I'm the driver)</option>
-            </select>
-          </div>
+          
 
           {/* Station */}
           <div className="space-y-2">

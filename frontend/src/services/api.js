@@ -21,6 +21,8 @@ export const authAPI = {
     api.post('/auth/signup', { email, password, name, phone, gender }),
   login: (email, password) =>
     api.post('/auth/login', { email, password }),
+  googleLogin: (token) =>
+    api.post('/auth/google-login', { token }),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (name, phone, gender) =>
     api.put('/auth/profile', { name, phone, gender }),

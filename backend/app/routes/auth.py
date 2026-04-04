@@ -2,6 +2,9 @@ from flask import Blueprint, request, jsonify
 from app.models import db, User
 from app.utils.auth import generate_token, token_required
 from datetime import datetime
+from google.auth.transport import requests
+from google.oauth2 import id_token
+import os
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -107,6 +110,79 @@ def update_profile(user_id):
             'message': 'Profile updated successfully',
             'user': user.to_dict()
         }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/google-login', methods=['POST'])
+def google_login():
+    """Google OAuth login endpoint"""
+    data = request.get_json()
+    token = data.get('token')
+    
+    if not token:
+        return jsonify({'error': 'Google token is required'}), 400
+    
+    try:
+        # Verify the Google token
+        GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+        
+        if not GOOGLE_CLIENT_ID:
+            return jsonify({'error': 'Google Client ID not configured'}), 500
+        
+        # Verify token
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+        
+        # Token is valid, extract user info
+        google_id = idinfo['sub']
+        email = idinfo.get('email')
+        name = idinfo.get('name', 'Google User')
+        avatar_url = idinfo.get('picture')
+        
+        # Check if user exists by google_id
+        user = User.query.filter_by(google_id=google_id).first()
+        
+        if not user:
+            # Check if user exists by email
+            user = User.query.filter_by(email=email).first()
+            
+            if user:
+                # Link existing account with Google
+                user.google_id = google_id
+                user.oauth_provider = 'google'
+                user.avatar_url = avatar_url
+            else:
+                # Create new user
+                user = User(
+                    email=email,
+                    name=name,
+                    google_id=google_id,
+                    oauth_provider='google',
+                    avatar_url=avatar_url
+                )
+                # Set a placeholder password for OAuth users
+                user.password_hash = None
+        else:
+            # Update user info
+            user.name = name
+            user.avatar_url = avatar_url
+            user.updated_at = datetime.utcnow()
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        # Generate JWT token for our app
+        jwt_token = generate_token(user.id)
+        
+        return jsonify({
+            'message': 'Google login successful',
+            'user': user.to_dict(),
+            'token': jwt_token
+        }), 200
+        
+    except ValueError as e:
+        # Invalid token
+        return jsonify({'error': 'Invalid Google token'}), 401
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
