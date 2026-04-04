@@ -32,6 +32,14 @@ export const authAPI = {
 export const rideAPI = {
   searchTrain: (pnr, train_number, journey_date, destination_station) =>
     api.post('/ride/search-train', { pnr, train_number, journey_date, destination_station }),
+  searchRides: (station, arrival_time, destination_lat, destination_lng, time_buffer) =>
+    api.post('/ride/search', {
+      station,
+      arrival_time: arrival_time || new Date().toISOString(),
+      destination_lat: destination_lat || 0,
+      destination_lng: destination_lng || 0,
+      time_buffer: time_buffer || 3600,
+    }),
   createRide: (station, arrival_time, destination_name, destination_lat, destination_lng, intent_type, seats_available, seats_needed) =>
     api.post('/ride/create', {
       station,

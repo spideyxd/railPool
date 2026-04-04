@@ -32,16 +32,17 @@ def create_ride_intent(user_id):
     """Create a new ride intent"""
     data = request.get_json()
     
-    # Validate required fields
-    required_fields = ['station', 'arrival_time', 'destination_name', 
+    # Validate required fields (destination_name optional - from map)
+    required_fields = ['station', 'arrival_time', 
                       'destination_lat', 'destination_lng', 'intent_type']
     
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        # Parse arrival time
-        arrival_time = datetime.fromisoformat(data['arrival_time'])
+        # Parse arrival time - handle both ISO format (with Z) and datetime-local format
+        arrival_time_str = data['arrival_time'].replace('Z', '+00:00') if 'Z' in data['arrival_time'] else data['arrival_time']
+        arrival_time = datetime.fromisoformat(arrival_time_str)
         
         # Validate intent type
         if data['intent_type'] not in ['offering', 'seeking']:
@@ -54,13 +55,20 @@ def create_ride_intent(user_id):
         if data['intent_type'] == 'seeking' and not data.get('seats_needed'):
             return jsonify({'error': 'seats_needed required for seeking'}), 400
         
+        # Validate and convert coordinates with better error handling
+        try:
+            dest_lat = float(str(data.get('destination_lat', '')).strip())
+            dest_lng = float(str(data.get('destination_lng', '')).strip())
+        except (ValueError, AttributeError):
+            return jsonify({'error': 'destination_lat and destination_lng must be valid numbers'}), 400
+        
         ride_intent = RideService.create_ride_intent(
             user_id=user_id,
             station=data['station'],
             arrival_time=arrival_time,
-            destination_name=data['destination_name'],
-            destination_lat=float(data['destination_lat']),
-            destination_lng=float(data['destination_lng']),
+            destination_name=data.get('destination_name', 'Location'),
+            destination_lat=dest_lat,
+            destination_lng=dest_lng,
             intent_type=data['intent_type'],
             seats_available=data.get('seats_available'),
             seats_needed=data.get('seats_needed')
@@ -88,7 +96,9 @@ def search_matches(user_id):
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        arrival_time = datetime.fromisoformat(data['arrival_time'])
+        # Handle both ISO format (with Z) and datetime-local format
+        arrival_time_str = data['arrival_time'].replace('Z', '+00:00') if 'Z' in data['arrival_time'] else data['arrival_time']
+        arrival_time = datetime.fromisoformat(arrival_time_str)
         time_buffer = data.get('time_buffer', 3600)  # Default 1 hour
         
         matches = RideService.search_matches(

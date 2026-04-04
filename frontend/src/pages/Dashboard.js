@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Plus, LogOut, Check, X, MessageSquare, MapPin, Clock, Users, AlertCircle, Loader } from 'lucide-react';
 import { rideAPI, requestAPI } from '../services/api';
+import LocationPickerMap from '../components/LocationPickerMap';
+import StationAutocomplete from '../components/StationAutocomplete';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('create');
@@ -14,10 +16,32 @@ const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
+    // Load all data on component mount
+    loadAllData();
+  }, []);
+
+  useEffect(() => {
     if (activeTab !== 'create') {
       loadData();
     }
   }, [activeTab]);
+
+  const loadAllData = async () => {
+    try {
+      // Load intents
+      const intentsResponse = await rideAPI.getMyIntents();
+      setMyIntents(intentsResponse.data.intents);
+      
+      // Load requests
+      const requestsResponse = await requestAPI.getMyRequests();
+      setMyRequests({
+        sent: requestsResponse.data.sent_requests,
+        received: requestsResponse.data.received_requests,
+      });
+    } catch (err) {
+      // Silently fail on load - don't show error until user interacts
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -176,9 +200,9 @@ const CreateRideForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     station: '',
     arrival_time: '',
-    destination_name: '',
     destination_lat: '',
     destination_lng: '',
+    destination_name: 'Location',
     intent_type: 'seeking',
     seats_available: '4',
     seats_needed: '1',
@@ -192,11 +216,24 @@ const CreateRideForm = ({ onSuccess }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleStationSelect = (station) => {
+    if (station) {
+      setFormData((prev) => ({ ...prev, station: station.name }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     setSuccess(false);
+
+    // Validate coordinates are not empty
+    if (!formData.destination_lat || !formData.destination_lng) {
+      setError('Please select a location on the map');
+      setLoading(false);
+      return;
+    }
 
     try {
       await rideAPI.createRide(
@@ -213,9 +250,9 @@ const CreateRideForm = ({ onSuccess }) => {
       setFormData({
         station: '',
         arrival_time: '',
-        destination_name: '',
         destination_lat: '',
         destination_lng: '',
+        destination_name: 'Location',
         intent_type: 'seeking',
         seats_available: '4',
         seats_needed: '1',
@@ -265,15 +302,11 @@ const CreateRideForm = ({ onSuccess }) => {
 
           {/* Station */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Station</label>
-            <input
-              type="text"
-              name="station"
+            <label className="block text-sm font-medium">🚆 Select Train Station</label>
+            <StationAutocomplete
               value={formData.station}
-              onChange={handleChange}
-              required
-              placeholder="e.g., Delhi Central"
-              className="input-field"
+              onChange={handleStationSelect}
+              placeholder="Search by station name or code..."
             />
           </div>
 
@@ -290,48 +323,26 @@ const CreateRideForm = ({ onSuccess }) => {
             />
           </div>
 
-          {/* Destination */}
+          {/* Location Picker Map */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Destination Name</label>
-            <input
-              type="text"
-              name="destination_name"
-              value={formData.destination_name}
-              onChange={handleChange}
-              required
-              placeholder="e.g., Airport T1"
-              className="input-field"
+            <label className="block text-sm font-medium">📍 Select Destination Location</label>
+            <LocationPickerMap
+              onLocationSelect={(locationData) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  destination_lat: locationData.lat,
+                  destination_lng: locationData.lng,
+                  destination_name: locationData.address || 'Location',
+                }));
+                setError(''); // Clear validation error when location selected
+              }}
+              initialLocation={{
+                lat: formData.destination_lat ? parseFloat(formData.destination_lat) : 28.6139,
+                lng: formData.destination_lng ? parseFloat(formData.destination_lng) : 77.209,
+                address: formData.destination_name,
+              }}
+              searchPlaceholder="Search for your destination..."
             />
-          </div>
-
-          {/* Coordinates */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Latitude</label>
-              <input
-                type="number"
-                name="destination_lat"
-                value={formData.destination_lat}
-                onChange={handleChange}
-                required
-                step="0.0001"
-                placeholder="28.5562"
-                className="input-field"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Longitude</label>
-              <input
-                type="number"
-                name="destination_lng"
-                value={formData.destination_lng}
-                onChange={handleChange}
-                required
-                step="0.0001"
-                placeholder="77.1199"
-                className="input-field"
-              />
-            </div>
           </div>
 
           {/* Seats */}
