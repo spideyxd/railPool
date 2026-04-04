@@ -11,7 +11,7 @@ def create_app():
     # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
         'DATABASE_URL', 
-        'postgresql://postgres:postgres@localhost:5432/railpool'
+        'postgresql://postgres:Shivam26%40@localhost:5432/railpool'
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JSON_SORT_KEYS'] = False

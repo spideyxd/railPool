@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Mail, Lock, User, Phone, Users, ArrowRight, Loader } from 'lucide-react';
 import { authAPI } from '../services/api';
-import '../styles/Auth.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -43,80 +44,209 @@ const Signup = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>RailPool</h1>
-        <h2>Sign Up</h2>
-        {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Full Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="John Doe"
-            />
-          </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="your@email.com"
-            />
-          </div>
-          <div className="form-group">
-            <label>Phone Number</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="9876543210"
-            />
-          </div>
-          <div className="form-group">
-            <label>Gender</label>
-            <select name="gender" value={formData.gender} onChange={handleChange}>
-              <option value="">Select (Optional)</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter a strong password"
-            />
-          </div>
-          <button type="submit" disabled={loading} className="btn-primary">
-            {loading ? 'Creating account...' : 'Sign Up'}
-          </button>
-        </form>
-        <p>
-          Already have an account?{' '}
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => navigate('/login')}
-          >
-            Login
-          </button>
-        </p>
+    <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
+          transition={{ duration: 20, repeat: Infinity }}
+          className="absolute top-20 left-20 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
+          transition={{ duration: 15, repeat: Infinity }}
+          className="absolute bottom-20 right-20 w-72 h-72 bg-accent-500/10 rounded-full blur-3xl"
+        />
       </div>
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="w-full max-w-md relative z-10"
+      >
+        {/* Logo/Title */}
+        <motion.div variants={itemVariants} className="mb-8 text-center">
+          <motion.div
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="mb-4"
+          >
+            <div className="w-14 h-14 mx-auto bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center">
+              <span className="text-white font-bold text-xl">RP</span>
+            </div>
+          </motion.div>
+          <h1 className="text-3xl font-bold gradient-text mb-2">RailPool</h1>
+          <p className="text-dark-400">Join our community</p>
+        </motion.div>
+
+        {/* Card */}
+        <motion.div
+          variants={itemVariants}
+          className="glass p-8 space-y-5"
+        >
+          {/* Error Alert */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-start gap-3"
+            >
+              <div className="mt-0.5">!</div>
+              <div>{error}</div>
+            </motion.div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Name Field */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-sm font-medium text-dark-300">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-4 top-3 w-5 h-5 text-dark-500" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="John Doe"
+                  className="input-field pl-12 h-10"
+                />
+              </div>
+            </motion.div>
+
+            {/* Email Field */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-sm font-medium text-dark-300">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-3 w-5 h-5 text-dark-500" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="you@example.com"
+                  className="input-field pl-12 h-10"
+                />
+              </div>
+            </motion.div>
+
+            {/* Phone Field */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-sm font-medium text-dark-300">Phone Number</label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-3 w-5 h-5 text-dark-500" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="9876543210"
+                  className="input-field pl-12 h-10"
+                />
+              </div>
+            </motion.div>
+
+            {/* Gender Field */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-sm font-medium text-dark-300">Gender</label>
+              <div className="relative">
+                <Users className="absolute left-4 top-3 w-5 h-5 text-dark-500 pointer-events-none" />
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="input-field pl-12 h-10 appearance-none cursor-pointer bg-dark-800"
+                >
+                  <option value="">Select (Optional)</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </motion.div>
+
+            {/* Password Field */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-sm font-medium text-dark-300">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-3 w-5 h-5 text-dark-500" />
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  placeholder="••••••••"
+                  className="input-field pl-12 h-10"
+                />
+              </div>
+            </motion.div>
+
+            {/* Submit Button */}
+            <motion.button
+              variants={itemVariants}
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary py-3 mt-4 group"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center justify-center gap-2">
+                {loading ? (
+                  <>
+                    <Loader className="w-5 h-5 animate-spin" />
+                    <span>Creating account...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </div>
+            </motion.button>
+          </form>
+
+          {/* Divider */}
+          <motion.div variants={itemVariants} className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-dark-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-dark-900 text-dark-500">Already have an account?</span>
+            </div>
+          </motion.div>
+
+          {/* Login Link */}
+          <motion.button
+            variants={itemVariants}
+            type="button"
+            onClick={() => navigate('/login')}
+            className="w-full btn-secondary py-3"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Sign In
+          </motion.button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
