@@ -5,6 +5,7 @@ import { Search as SearchIcon, MapPin, Loader, ArrowRight, ChevronLeft, Navigati
 import { rideAPI } from '../services/api';
 import StationAutocomplete from '../components/StationAutocomplete';
 import LocationPickerMap from '../components/LocationPickerMap';
+import RideDetailsModal from '../components/RideDetailsModal';
 import { getDistanceCategory, formatDistance } from '../utils/distance';
 
 const Search = () => {
@@ -15,6 +16,8 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
+  const [selectedRide, setSelectedRide] = useState(null);
+  const [showRideDetails, setShowRideDetails] = useState(false);
   const navigate = useNavigate();
 
   const handleStationSelect = (station) => {
@@ -25,6 +28,11 @@ const Search = () => {
   const handleLocationSelect = (locationData) => {
     setUserLocation(locationData);
     setError('');
+  };
+
+  const handleViewDetails = (ride) => {
+    setSelectedRide(ride);
+    setShowRideDetails(true);
   };
 
   const handleSearch = async (e) => {
@@ -273,6 +281,7 @@ const Search = () => {
                       key={ride.id || index}
                       ride={ride}
                       index={index}
+                      onViewDetails={handleViewDetails}
                     />
                   ))}
                 </motion.div>
@@ -316,11 +325,24 @@ const Search = () => {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Ride Details Modal */}
+      <RideDetailsModal
+        ride={selectedRide}
+        isOpen={showRideDetails}
+        onClose={() => {
+          setShowRideDetails(false);
+          setSelectedRide(null);
+        }}
+        onRequestSuccess={() => {
+          // Optional: Refresh results or show notification
+        }}
+      />
     </div>
   );
 };
 
-const RideCard = ({ ride, index }) => {
+const RideCard = ({ ride, index, onViewDetails }) => {
   const distanceCategory = getDistanceCategory(ride.distance || 0);
   const categoryColors = {
     near: 'bg-green-500/10 border-green-500/30 text-green-400',
@@ -393,6 +415,7 @@ const RideCard = ({ ride, index }) => {
 
       {/* Action Button */}
       <motion.button
+        onClick={() => onViewDetails(ride)}
         className="w-full mt-4 btn-primary py-2 text-sm group"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}

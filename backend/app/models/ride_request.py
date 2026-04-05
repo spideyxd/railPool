@@ -15,10 +15,13 @@ class RideRequest(db.Model):
     
     # Relationships for messages
     messages = db.relationship('Message', backref='ride_request', lazy=True, cascade='all, delete-orphan')
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_requests_detail')
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_requests_detail')
+    # Note: ride_intent is provided by backref from RideIntent.ride_requests
     
-    def to_dict(self):
+    def to_dict(self, include_users=False):
         """Convert ride request to dictionary"""
-        return {
+        data = {
             'id': self.id,
             'sender_id': self.sender_id,
             'receiver_id': self.receiver_id,
@@ -27,3 +30,19 @@ class RideRequest(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+        
+        if include_users:
+            data['sender'] = {
+                'id': self.sender.id,
+                'name': self.sender.name,
+                'avatar_url': self.sender.avatar_url,
+                'rating': self.sender.rating
+            }
+            data['receiver'] = {
+                'id': self.receiver.id,
+                'name': self.receiver.name,
+                'avatar_url': self.receiver.avatar_url,
+                'rating': self.receiver.rating
+            }
+        
+        return data

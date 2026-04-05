@@ -24,10 +24,7 @@ class User(db.Model):
     
     # Relationships
     ride_intents = db.relationship('RideIntent', backref='user', lazy=True, cascade='all, delete-orphan')
-    sent_requests = db.relationship('RideRequest', foreign_keys='RideRequest.sender_id', 
-                                   backref='sender', lazy=True, cascade='all, delete-orphan')
-    received_requests = db.relationship('RideRequest', foreign_keys='RideRequest.receiver_id',
-                                       backref='receiver', lazy=True, cascade='all, delete-orphan')
+    # Note: sent_requests and received_requests are provided by backrefs from RideRequest relationships
     messages = db.relationship('Message', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):

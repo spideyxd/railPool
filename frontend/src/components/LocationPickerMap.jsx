@@ -159,8 +159,26 @@ const LocationPickerMap = ({
         lng: place.geometry.location.lng(),
       };
 
-      updateMarkerLocation(newLocation, google);
-      setSearchInput(place.formatted_address);
+      // Use place formatted_address if available, otherwise use name or fallback
+      const placeName = place.formatted_address || place.name || 'Location';
+      
+      // Update location with place name before reverse geocoding
+      setLocation({
+        lat: newLocation.lat,
+        lng: newLocation.lng,
+        address: placeName,
+      });
+      setShowConfirm(true);
+      setSearchInput(placeName);
+      setError('');
+      
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.panTo(newLocation);
+      }
+      
+      if (markerRef.current) {
+        markerRef.current.setPosition(newLocation);
+      }
     });
 
     autocompleteRef.current = autocomplete;

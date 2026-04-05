@@ -8,15 +8,28 @@ request_bp = Blueprint('request', __name__, url_prefix='/request')
 @request_bp.route('/send', methods=['POST'])
 @token_required
 def send_request(user_id):
-    """Send a pooling request"""
+    """Send a pooling request to join a ride"""
     data = request.get_json()
     
-    if not data or not data.get('receiver_id') or not data.get('ride_intent_id'):
-        return jsonify({'error': 'receiver_id and ride_intent_id are required'}), 400
+    # Accept both old format (receiver_id + ride_intent_id) and new format (just ride_intent_id)
+    ride_intent_id = data.get('ride_intent_id')
+    receiver_id = data.get('receiver_id')
+    
+    if not ride_intent_id:
+        return jsonify({'error': 'ride_intent_id is required'}), 400
     
     try:
-        receiver_id = int(data['receiver_id'])
-        ride_intent_id = int(data['ride_intent_id'])
+        from app.models import RideIntent
+        ride_intent_id = int(ride_intent_id)
+        
+        # If receiver_id not provided, get it from the ride_intent
+        if not receiver_id:
+            ride_intent = RideIntent.query.get(ride_intent_id)
+            if not ride_intent:
+                return jsonify({'error': 'Ride not found'}), 404
+            receiver_id = ride_intent.user_id
+        else:
+            receiver_id = int(receiver_id)
         
         # Check if receiver exists
         receiver = User.query.get(receiver_id)
@@ -82,8 +95,8 @@ def get_user_requests(user_id):
         requests_data = RequestService.get_user_requests(user_id, status)
         
         return jsonify({
-            'sent_requests': [r.to_dict() for r in requests_data['sent']],
-            'received_requests': [r.to_dict() for r in requests_data['received']],
+            'sent_requests': [r.to_dict(include_users=True) for r in requests_data['sent']],
+            'received_requests': [r.to_dict(include_users=True) for r in requests_data['received']],
             'total': len(requests_data['sent']) + len(requests_data['received'])
         }), 200
     except Exception as e:

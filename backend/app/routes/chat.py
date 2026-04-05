@@ -21,15 +21,24 @@ def get_messages(user_id, request_id):
         if ride_request.sender_id != user_id and ride_request.receiver_id != user_id:
             return jsonify({'error': 'Unauthorized'}), 403
         
-        # Check if request is accepted
-        if ride_request.status != 'accepted':
-            return jsonify({'error': 'Chat only available for accepted requests'}), 403
-        
         messages = ChatService.get_messages(request_id, limit)
         
+        # Format messages with sender info
+        formatted_messages = []
+        for msg in messages:
+            sender = User.query.get(msg.sender_id)
+            formatted_messages.append({
+                'id': msg.id,
+                'sender_id': msg.sender_id,
+                'sender_name': sender.name,
+                'sender_avatar': sender.avatar_url,
+                'content': msg.content,
+                'created_at': msg.created_at.isoformat()
+            })
+        
         return jsonify({
-            'messages': [msg.to_dict() for msg in messages],
-            'count': len(messages)
+            'messages': formatted_messages,
+            'count': len(formatted_messages)
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -53,15 +62,75 @@ def send_message(user_id, request_id):
         if ride_request.sender_id != user_id and ride_request.receiver_id != user_id:
             return jsonify({'error': 'Unauthorized'}), 403
         
-        # Check if request is accepted
-        if ride_request.status != 'accepted':
-            return jsonify({'error': 'Chat only available for accepted requests'}), 403
-        
         message = ChatService.send_message(user_id, request_id, data['content'])
+        
+        # Get sender info
+        sender = User.query.get(user_id)
         
         return jsonify({
             'message': 'Message sent',
-            'data': message.to_dict()
+            'data': {
+                'id': message.id,
+                'sender_id': message.sender_id,
+                'sender_name': sender.name,
+                'sender_avatar': sender.avatar_url,
+                'content': message.content,
+                'created_at': message.created_at.isoformat()
+            }
         }), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@chat_bp.route('/conversations', methods=['GET'])
+@token_required
+def get_conversations(user_id):
+    """Get all conversations for a user"""
+    try:
+        # Get all ride requests where user is sender or receiver
+        ride_requests = RideRequest.query.filter(
+            (RideRequest.sender_id == user_id) | (RideRequest.receiver_id == user_id)
+        ).all()
+        
+        conversations = []
+        for ride_req in ride_requests:
+            # Get the other user
+            other_user_id = ride_req.receiver_id if user_id == ride_req.sender_id else ride_req.sender_id
+            other_user = User.query.get(other_user_id)
+            
+            # Get latest message
+            latest_message = Message.query.filter_by(
+                ride_request_id=ride_req.id
+            ).order_by(Message.created_at.desc()).first()
+            
+            conversations.append({
+                'ride_request_id': ride_req.id,
+                'other_user': {
+                    'id': other_user.id,
+                    'name': other_user.name,
+                    'avatar_url': other_user.avatar_url,
+                    'rating': other_user.rating
+                },
+                'ride_intent': {
+                    'id': ride_req.ride_intent.id,
+                    'station': ride_req.ride_intent.station,
+                    'destination_name': ride_req.ride_intent.destination_name,
+                    'arrival_time': ride_req.ride_intent.arrival_time.isoformat()
+                },
+                'status': ride_req.status,
+                'latest_message': latest_message.content if latest_message else '',
+                'latest_message_time': latest_message.created_at.isoformat() if latest_message else None,
+                'message_count': Message.query.filter_by(ride_request_id=ride_req.id).count()
+            })
+        
+        # Sort by latest message
+        conversations.sort(
+            key=lambda x: x['latest_message_time'] or x['ride_intent']['arrival_time'],
+            reverse=True
+        )
+        
+        return jsonify({
+            'conversations': conversations,
+            'total': len(conversations)
+        }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

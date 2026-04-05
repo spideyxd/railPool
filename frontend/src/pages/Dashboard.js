@@ -17,6 +17,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Load all data on component mount
+    setError(''); // Clear any previous errors
     loadAllData();
   }, []);
 
@@ -103,7 +104,7 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -113,15 +114,27 @@ const Dashboard = () => {
               <Search className="w-4 h-4" />
               <span>Search Rides</span>
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              className="btn-secondary gap-2 flex items-center"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </motion.button>
+
+            {/* Profile Picture + Logout */}
+            <div className="flex items-center gap-3 pl-3 border-l border-dark-700">
+              {user.avatar_url && (
+                <motion.img
+                  src={user.avatar_url}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-primary-500/50 hover:border-primary-500 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                />
+              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="btn-secondary gap-2 flex items-center"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </motion.button>
+            </div>
           </div>
         </div>
       </nav>
@@ -592,6 +605,9 @@ const RequestsList = ({ requests, loading, onUpdate }) => {
 };
 
 const RequestCard = ({ request, idx, isSent, onRespond, onChat }) => {
+  // For received requests, show sender. For sent requests, show receiver.
+  const otherUser = isSent ? request.receiver : request.sender;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -599,8 +615,24 @@ const RequestCard = ({ request, idx, isSent, onRespond, onChat }) => {
       transition={{ delay: idx * 0.1 }}
       className="card-hover"
     >
+      {/* User Info Header */}
       <div className="flex items-center justify-between mb-4">
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+        <div className="flex items-center gap-3 flex-1">
+          {otherUser?.avatar_url && (
+            <img
+              src={otherUser.avatar_url}
+              alt={otherUser.name}
+              className="w-10 h-10 rounded-full object-cover border-2 border-primary-500/30"
+            />
+          )}
+          <div className="flex-1">
+            <p className="font-semibold text-white text-sm">{otherUser?.name || 'Unknown User'}</p>
+            <p className="text-xs text-dark-400">
+              {isSent ? 'Sent request' : 'Sent you a request'}
+            </p>
+          </div>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
           request.status === 'pending'
             ? 'bg-yellow-500/20 text-yellow-400'
             : request.status === 'accepted'
@@ -611,6 +643,7 @@ const RequestCard = ({ request, idx, isSent, onRespond, onChat }) => {
         </span>
       </div>
 
+      {/* Actions */}
       <div className="space-y-4">
         {!isSent && request.status === 'pending' && (
           <div className="flex gap-2">

@@ -66,8 +66,8 @@ export const rideAPI = {
 
 // Request endpoints
 export const requestAPI = {
-  sendRequest: (receiver_id, ride_intent_id) =>
-    api.post('/request/send', { receiver_id, ride_intent_id }),
+  sendRequest: (ride_intent_id) =>
+    api.post('/request/send', { ride_intent_id }),
   respondToRequest: (request_id, status) =>
     api.post(`/request/${request_id}/respond`, { status }),
   getMyRequests: (status) =>
@@ -78,10 +78,12 @@ export const requestAPI = {
 
 // Chat endpoints
 export const chatAPI = {
-  getMessages: (request_id, limit) =>
+  getMessages: (request_id, limit = 50) =>
     api.get(`/chat/${request_id}/messages`, { params: { limit } }),
   sendMessage: (request_id, content) =>
     api.post(`/chat/${request_id}/send`, { content }),
+  getConversations: () =>
+    api.get('/chat/conversations'),
 };
 
 export default api;
