@@ -14,17 +14,37 @@ const RideDetailsModal = ({ ride, isOpen, onClose, onRequestSuccess }) => {
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState('');
 
-  // Initialize map when modal opens
+  // Initialize map when modal opens or ride changes
   useEffect(() => {
-    if (isOpen && mapRef.current && !mapInstanceRef.current) {
+    if (isOpen && mapRef.current && ride && ride.destination_lat && ride.destination_lng) {
+      // Reset map instance if ride changes
+      mapInstanceRef.current = null;
       initializeMap();
     }
+  }, [isOpen, ride]);
+
+  // Cleanup when modal closes
+  useEffect(() => {
+    return () => {
+      if (!isOpen) {
+        mapInstanceRef.current = null;
+      }
+    };
   }, [isOpen]);
 
   const initializeMap = async () => {
     try {
       const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-      if (!apiKey) return;
+      if (!apiKey) {
+        console.error('Google Maps API key not found');
+        return;
+      }
+
+      // Validate coordinates exist
+      if (!ride?.destination_lat || !ride?.destination_lng) {
+        console.error('Ride coordinates missing:', { lat: ride?.destination_lat, lng: ride?.destination_lng });
+        return;
+      }
 
       const loader = new JSAPILoader({
         apiKey: apiKey,
@@ -35,10 +55,10 @@ const RideDetailsModal = ({ ride, isOpen, onClose, onRequestSuccess }) => {
       const google = await loader.load();
 
       const mapInstance = new google.maps.Map(mapRef.current, {
-        zoom: 14,
+        zoom: 15,
         center: {
-          lat: ride.destination_lat,
-          lng: ride.destination_lng,
+          lat: parseFloat(ride.destination_lat),
+          lng: parseFloat(ride.destination_lng),
         },
         mapTypeControl: true,
         fullscreenControl: true,
@@ -51,14 +71,14 @@ const RideDetailsModal = ({ ride, isOpen, onClose, onRequestSuccess }) => {
       // Add marker at ride location
       new google.maps.Marker({
         position: {
-          lat: ride.destination_lat,
-          lng: ride.destination_lng,
+          lat: parseFloat(ride.destination_lat),
+          lng: parseFloat(ride.destination_lng),
         },
         map: mapInstance,
-        title: ride.destination_name,
+        title: ride.destination_name || 'Ride Location',
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
+          scale: 12,
           fillColor: '#3B82F6',
           fillOpacity: 1,
           strokeColor: '#fff',
@@ -163,15 +183,15 @@ const RideDetailsModal = ({ ride, isOpen, onClose, onRequestSuccess }) => {
               </div>
             </div>
 
-            {/* Time & Type */}
+            {/* Date, Station & Type */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-dark-800 rounded-lg border border-dark-700">
                 <p className="text-xs text-dark-500 font-medium mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Arrival Time
+                  Arrival Date
                 </p>
                 <p className="font-medium">
-                  {new Date(ride.arrival_time).toLocaleString()}
+                  {ride.arrival_date ? new Date(ride.arrival_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
                 </p>
               </div>
 

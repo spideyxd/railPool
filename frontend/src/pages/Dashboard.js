@@ -5,6 +5,7 @@ import { Search, Plus, LogOut, Check, X, MessageSquare, MapPin, Clock, Users, Al
 import { rideAPI, requestAPI } from '../services/api';
 import LocationPickerMap from '../components/LocationPickerMap';
 import StationAutocomplete from '../components/StationAutocomplete';
+import TrainAutocomplete from '../components/TrainAutocomplete';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('create');
@@ -211,8 +212,10 @@ const Dashboard = () => {
 
 const CreateRideForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
+    train_number: '',
+    train_name: '',
     station: '',
-    arrival_time: '',
+    arrival_date: '',
     destination_lat: '',
     destination_lng: '',
     destination_name: 'Location',
@@ -227,6 +230,16 @@ const CreateRideForm = ({ onSuccess }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTrainSelect = (train) => {
+    if (train) {
+      setFormData((prev) => ({ 
+        ...prev, 
+        train_number: train.number,
+        train_name: train.name
+      }));
+    }
   };
 
   const handleStationSelect = (station) => {
@@ -250,8 +263,10 @@ const CreateRideForm = ({ onSuccess }) => {
 
     try {
       await rideAPI.createRide(
+        formData.train_number,
+        formData.train_name,
         formData.station,
-        formData.arrival_time,
+        formData.arrival_date,
         formData.destination_name,
         formData.destination_lat,
         formData.destination_lng,
@@ -261,8 +276,10 @@ const CreateRideForm = ({ onSuccess }) => {
       );
       setSuccess(true);
       setFormData({
+        train_number: '',
+        train_name: '',
         station: '',
-        arrival_time: '',
+        arrival_date: '',
         destination_lat: '',
         destination_lng: '',
         destination_name: 'Location',
@@ -310,8 +327,15 @@ const CreateRideForm = ({ onSuccess }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Intent Type */}
-          
+          {/* Train Number */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">🚂 Select Train Number</label>
+            <TrainAutocomplete
+              value={formData.train_number}
+              onChange={handleTrainSelect}
+              placeholder="Search by train number or name..."
+            />
+          </div>
 
           {/* Station */}
           <div className="space-y-2">
@@ -323,13 +347,13 @@ const CreateRideForm = ({ onSuccess }) => {
             />
           </div>
 
-          {/* Arrival Time */}
+          {/* Arrival Date */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Arrival Time</label>
+            <label className="block text-sm font-medium">📅 Arrival Date</label>
             <input
-              type="datetime-local"
-              name="arrival_time"
-              value={formData.arrival_time}
+              type="date"
+              name="arrival_date"
+              value={formData.arrival_date}
               onChange={handleChange}
               required
               className="input-field"
@@ -356,6 +380,11 @@ const CreateRideForm = ({ onSuccess }) => {
               }}
               searchPlaceholder="Search for your destination..."
             />
+            {formData.destination_name && formData.destination_name !== 'Location' && (
+              <p className="text-xs text-dark-400">
+                ✓ Destination selected: {formData.destination_name}
+              </p>
+            )}
           </div>
 
           {/* Seats */}
@@ -473,6 +502,11 @@ const RideIntentsList = ({ intents, loading, onDeactivate }) => {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="font-semibold text-lg">{intent.destination_name}</h3>
+              <p className="text-sm text-dark-400">
+                {intent.train_number && intent.train_name ? (
+                  <span>{intent.train_number} ({intent.train_name})</span>
+                ) : null}
+              </p>
               <p className="text-sm text-dark-400">{intent.station}</p>
             </div>
             <motion.span
@@ -491,7 +525,7 @@ const RideIntentsList = ({ intents, loading, onDeactivate }) => {
           <div className="space-y-3 mb-5">
             <div className="flex items-center gap-3 text-sm text-dark-300">
               <Clock className="w-4 h-4 text-primary-400" />
-              <span>{new Date(intent.arrival_time).toLocaleString()}</span>
+              <span>{intent.arrival_date ? new Date(intent.arrival_date + 'T00:00:00').toLocaleDateString() : 'N/A'}</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-dark-300">
               <Users className="w-4 h-4 text-primary-400" />

@@ -6,14 +6,16 @@ class RideService:
     """Service for managing ride intents and matching"""
     
     @staticmethod
-    def create_ride_intent(user_id, station, arrival_time, destination_name, 
-                          destination_lat, destination_lng, intent_type, 
+    def create_ride_intent(user_id, train_number=None, train_name=None, station=None, arrival_date=None, 
+                          destination_name=None, destination_lat=None, destination_lng=None, intent_type=None, 
                           seats_available=None, seats_needed=None):
         """Create a new ride intent"""
         ride_intent = RideIntent(
             user_id=user_id,
+            train_number=train_number,
+            train_name=train_name,
             station=station,
-            arrival_time=arrival_time,
+            arrival_date=arrival_date,
             destination_name=destination_name,
             destination_lat=destination_lat,
             destination_lng=destination_lng,
@@ -26,14 +28,15 @@ class RideService:
         return ride_intent
     
     @staticmethod
-    def search_matches(user_id, station, arrival_time, destination_lat, destination_lng, time_buffer=3600):
+    def search_matches(user_id, train_number=None, station=None, arrival_date=None, destination_lat=None, destination_lng=None, time_buffer=3600):
         """
         Search for matching ride intents
         
         Args:
             user_id: Current user ID
+            train_number: Train number (optional filter)
             station: Destination station
-            arrival_time: Arrival time (datetime)
+            arrival_date: Arrival date (date object)
             destination_lat: Destination latitude
             destination_lng: Destination longitude
             time_buffer: Time buffer in seconds (default 1 hour)
@@ -41,18 +44,19 @@ class RideService:
         Returns:
             List of matching rides sorted by distance
         """
-        # Calculate time range
-        min_time = arrival_time - timedelta(seconds=time_buffer)
-        max_time = arrival_time + timedelta(seconds=time_buffer)
-        
-        # Query for matching ride intents from other users
-        matches = RideIntent.query.filter(
+        # Build query for matching ride intents from other users
+        query = RideIntent.query.filter(
             RideIntent.user_id != user_id,
             RideIntent.station == station,
-            RideIntent.arrival_time >= min_time,
-            RideIntent.arrival_time <= max_time,
+            RideIntent.arrival_date == arrival_date,
             RideIntent.is_active == True
-        ).all()
+        )
+        
+        # Optional train number filter
+        if train_number:
+            query = query.filter(RideIntent.train_number == train_number)
+        
+        matches = query.all()
         
         # Calculate distance and create match objects
         match_results = []

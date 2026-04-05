@@ -32,17 +32,17 @@ def create_ride_intent(user_id):
     """Create a new ride intent"""
     data = request.get_json()
     
-    # Validate required fields (destination_name optional - from map)
-    required_fields = ['station', 'arrival_time', 
+    # Validate required fields
+    required_fields = ['station', 'arrival_date', 
                       'destination_lat', 'destination_lng', 'intent_type']
     
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        # Parse arrival time - handle both ISO format (with Z) and datetime-local format
-        arrival_time_str = data['arrival_time'].replace('Z', '+00:00') if 'Z' in data['arrival_time'] else data['arrival_time']
-        arrival_time = datetime.fromisoformat(arrival_time_str)
+        # Parse arrival date - expect YYYY-MM-DD format
+        from datetime import date
+        arrival_date = datetime.strptime(data['arrival_date'], '%Y-%m-%d').date()
         
         # Validate intent type
         if data['intent_type'] not in ['offering', 'seeking']:
@@ -64,8 +64,10 @@ def create_ride_intent(user_id):
         
         ride_intent = RideService.create_ride_intent(
             user_id=user_id,
+            train_number=data.get('train_number'),
+            train_name=data.get('train_name'),
             station=data['station'],
-            arrival_time=arrival_time,
+            arrival_date=arrival_date,
             destination_name=data.get('destination_name', 'Location'),
             destination_lat=dest_lat,
             destination_lng=dest_lng,
@@ -90,21 +92,23 @@ def search_matches(user_id):
     data = request.get_json()
     
     # Validate required fields
-    required_fields = ['station', 'arrival_time', 'destination_lat', 'destination_lng']
+    required_fields = ['station', 'arrival_date', 'destination_lat', 'destination_lng']
     
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        # Handle both ISO format (with Z) and datetime-local format
-        arrival_time_str = data['arrival_time'].replace('Z', '+00:00') if 'Z' in data['arrival_time'] else data['arrival_time']
-        arrival_time = datetime.fromisoformat(arrival_time_str)
+        from datetime import date as date_type
+        # Parse arrival date - expect YYYY-MM-DD format
+        arrival_date = datetime.strptime(data['arrival_date'], '%Y-%m-%d').date()
         time_buffer = data.get('time_buffer', 3600)  # Default 1 hour
+        train_number = data.get('train_number')  # Optional filter
         
         matches = RideService.search_matches(
             user_id=user_id,
+            train_number=train_number,
             station=data['station'],
-            arrival_time=arrival_time,
+            arrival_date=arrival_date,
             destination_lat=float(data['destination_lat']),
             destination_lng=float(data['destination_lng']),
             time_buffer=time_buffer

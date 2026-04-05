@@ -146,7 +146,7 @@ def get_user_conversations(user_id):
                     'id': ride_req.ride_intent.id,
                     'station': ride_req.ride_intent.station,
                     'destination_name': ride_req.ride_intent.destination_name,
-                    'arrival_time': ride_req.ride_intent.arrival_time.isoformat()
+                    'arrival_date': ride_req.ride_intent.arrival_date.isoformat()
                 },
                 'status': ride_req.status,
                 'latest_message': latest_message.content if latest_message else '',
@@ -156,7 +156,7 @@ def get_user_conversations(user_id):
         
         # Sort by latest message
         conversations.sort(
-            key=lambda x: x['latest_message_time'] or x['ride_intent']['arrival_time'],
+            key=lambda x: x['latest_message_time'] or x['ride_intent']['arrival_date'],
             reverse=True
         )
         

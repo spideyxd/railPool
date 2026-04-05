@@ -7,8 +7,10 @@ class RideIntent(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    train_number = db.Column(db.String(10), nullable=True, index=True)  # e.g., "00101"
+    train_name = db.Column(db.String(255), nullable=True)  # e.g., "CNB MAGHMELA SPL"
     station = db.Column(db.String(120), nullable=False, index=True)
-    arrival_time = db.Column(db.DateTime, nullable=False, index=True)
+    arrival_date = db.Column(db.Date, nullable=False, index=True)  # Date only (YYYY-MM-DD)
     destination_name = db.Column(db.String(255), nullable=False)
     destination_lat = db.Column(db.Float, nullable=False)
     destination_lng = db.Column(db.Float, nullable=False)
@@ -27,8 +29,10 @@ class RideIntent(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'train_number': self.train_number,
+            'train_name': self.train_name,
             'station': self.station,
-            'arrival_time': self.arrival_time.isoformat(),
+            'arrival_date': self.arrival_date.isoformat() if self.arrival_date else None,
             'destination_name': self.destination_name,
             'destination_lat': self.destination_lat,
             'destination_lng': self.destination_lng,

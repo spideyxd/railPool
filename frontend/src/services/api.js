@@ -32,18 +32,21 @@ export const authAPI = {
 export const rideAPI = {
   searchTrain: (pnr, train_number, journey_date, destination_station) =>
     api.post('/ride/search-train', { pnr, train_number, journey_date, destination_station }),
-  searchRides: (station, arrival_time, destination_lat, destination_lng, time_buffer) =>
+  searchRides: (train_number, station, arrival_date, destination_lat, destination_lng, time_buffer) =>
     api.post('/ride/search', {
+      train_number: train_number || null,
       station,
-      arrival_time: arrival_time || new Date().toISOString(),
+      arrival_date,
       destination_lat: destination_lat || 0,
       destination_lng: destination_lng || 0,
       time_buffer: time_buffer || 3600,
     }),
-  createRide: (station, arrival_time, destination_name, destination_lat, destination_lng, intent_type, seats_available, seats_needed) =>
+  createRide: (train_number, train_name, station, arrival_date, destination_name, destination_lat, destination_lng, intent_type, seats_available, seats_needed) =>
     api.post('/ride/create', {
+      train_number,
+      train_name,
       station,
-      arrival_time,
+      arrival_date,
       destination_name,
       destination_lat,
       destination_lng,
@@ -51,10 +54,11 @@ export const rideAPI = {
       seats_available,
       seats_needed,
     }),
-  searchMatches: (station, arrival_time, destination_lat, destination_lng, time_buffer) =>
+  searchMatches: (train_number, station, arrival_date, destination_lat, destination_lng, time_buffer) =>
     api.post('/ride/search', {
+      train_number: train_number || null,
       station,
-      arrival_time,
+      arrival_date,
       destination_lat,
       destination_lng,
       time_buffer,

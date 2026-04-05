@@ -125,7 +125,15 @@ const LocationPickerMap = ({
         location: new google.maps.LatLng(newLocation.lat, newLocation.lng),
       });
 
-      const address = result[0]?.formatted_address || 'Address not found';
+      // Use formatted_address if available, otherwise construct from address components
+      let address = 'Selected Location';
+      if (result && result.length > 0) {
+        address = result[0].formatted_address;
+      } else {
+        // Fallback: use the search input if available, or show coordinates
+        address = searchInput.trim() ? searchInput : `${newLocation.lat.toFixed(4)}, ${newLocation.lng.toFixed(4)}`;
+      }
+      
       setLocation({
         lat: newLocation.lat,
         lng: newLocation.lng,
@@ -135,7 +143,15 @@ const LocationPickerMap = ({
       setError('');
     } catch (err) {
       console.error('Geocoding failed:', err);
-      setError('Could not retrieve address');
+      // On error, show a friendly message or use the search input
+      const fallbackAddress = searchInput.trim() ? searchInput : `Location (${newLocation.lat.toFixed(4)}, ${newLocation.lng.toFixed(4)})`;
+      setLocation({
+        lat: newLocation.lat,
+        lng: newLocation.lng,
+        address: fallbackAddress,
+      });
+      setShowConfirm(true);
+      setError('');
     }
   };
 

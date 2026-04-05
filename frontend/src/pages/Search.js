@@ -4,13 +4,15 @@ import { motion } from 'framer-motion';
 import { Search as SearchIcon, MapPin, Loader, ArrowRight, ChevronLeft, Navigation, Users, Clock, TrendingUp } from 'lucide-react';
 import { rideAPI } from '../services/api';
 import StationAutocomplete from '../components/StationAutocomplete';
+import TrainAutocomplete from '../components/TrainAutocomplete';
 import LocationPickerMap from '../components/LocationPickerMap';
 import RideDetailsModal from '../components/RideDetailsModal';
 import { getDistanceCategory, formatDistance } from '../utils/distance';
 
 const Search = () => {
+  const [selectedTrain, setSelectedTrain] = useState(null);
   const [selectedStation, setSelectedStation] = useState(null);
-  const [arrivalTime, setArrivalTime] = useState('');
+  const [arrivalDate, setArrivalDate] = useState('');
   const [userLocation, setUserLocation] = useState(null);
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,11 @@ const Search = () => {
 
   const handleStationSelect = (station) => {
     setSelectedStation(station);
+    setError('');
+  };
+
+  const handleTrainSelect = (train) => {
+    setSelectedTrain(train);
     setError('');
   };
 
@@ -43,8 +50,8 @@ const Search = () => {
       return;
     }
 
-    if (!arrivalTime) {
-      setError('Please select your arrival date and time');
+    if (!arrivalDate) {
+      setError('Please select your arrival date');
       return;
     }
 
@@ -58,10 +65,11 @@ const Search = () => {
     setSearched(true);
 
     try {
-      // Search rides by station with user-selected arrival time
+      // Search rides by station with user-selected arrival date
       const response = await rideAPI.searchRides(
+        selectedTrain?.number || null,
         selectedStation.name,
-        arrivalTime,
+        arrivalDate,
         userLocation.lat,
         userLocation.lng,
         3600 // 1 hour time buffer
@@ -137,6 +145,24 @@ const Search = () => {
 
           {/* Search Form */}
           <form onSubmit={handleSearch} className="space-y-6">
+            {/* Train Selection */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-sm font-medium flex items-center gap-2">
+                <span>🚂</span>
+                Select Train Number (Optional)
+              </label>
+              <TrainAutocomplete
+                value={selectedTrain?.number || ''}
+                onChange={handleTrainSelect}
+                placeholder="Search by train number or name..."
+              />
+              {selectedTrain && (
+                <p className="text-xs text-dark-400">
+                  ✓ Train selected: {selectedTrain.number} ({selectedTrain.name})
+                </p>
+              )}
+            </motion.div>
+
             {/* Station Selection */}
             <motion.div variants={itemVariants} className="space-y-2">
               <label className="block text-sm font-medium flex items-center gap-2">
@@ -155,25 +181,25 @@ const Search = () => {
               )}
             </motion.div>
 
-            {/* Arrival Time */}
+            {/* Arrival Date */}
             <motion.div variants={itemVariants} className="space-y-2">
               <label className="block text-sm font-medium flex items-center gap-2">
                 <Clock className="w-4 h-4 text-primary-500" />
                 When Do You Want to Travel?
               </label>
               <input
-                type="datetime-local"
-                value={arrivalTime}
+                type="date"
+                value={arrivalDate}
                 onChange={(e) => {
-                  setArrivalTime(e.target.value);
+                  setArrivalDate(e.target.value);
                   setError('');
                 }}
                 required
                 className="input-field"
               />
-              {arrivalTime && (
+              {arrivalDate && (
                 <p className="text-xs text-dark-400">
-                  ✓ Arrival time selected: {new Date(arrivalTime).toLocaleString()}
+                  ✓ Arrival date selected: {new Date(arrivalDate).toLocaleDateString()}
                 </p>
               )}
             </motion.div>
@@ -216,14 +242,14 @@ const Search = () => {
             <motion.button
               variants={itemVariants}
               type="submit"
-              disabled={loading || !selectedStation || !arrivalTime || !userLocation}
+              disabled={loading || !selectedStation || !arrivalDate || !userLocation}
               className={`w-full py-3 group rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                loading || !selectedStation || !arrivalTime || !userLocation
+                loading || !selectedStation || !arrivalDate || !userLocation
                   ? 'btn-secondary opacity-50 cursor-not-allowed'
                   : 'btn-primary'
               }`}
-              whileHover={selectedStation && arrivalTime && userLocation ? { scale: 1.02 } : {}}
-              whileTap={selectedStation && arrivalTime && userLocation ? { scale: 0.98 } : {}}
+              whileHover={selectedStation && arrivalDate && userLocation ? { scale: 1.02 } : {}}
+              whileTap={selectedStation && arrivalDate && userLocation ? { scale: 0.98 } : {}}
             >
               {loading ? (
                 <>
@@ -363,6 +389,9 @@ const RideCard = ({ ride, index, onViewDetails }) => {
           <h4 className="text-lg font-semibold text-white mb-1">
             {ride.intent_type === 'offering' ? '🚗 Offering a Ride' : '🔍 Looking for Ride'}
           </h4>
+          {ride.train_number && ride.train_name && (
+            <p className="text-xs text-dark-400 mb-1">🚂 {ride.train_number} ({ride.train_name})</p>
+          )}
           <p className="text-sm text-dark-400">{ride.station}</p>
         </div>
         <div className={`px-3 py-1 rounded-lg border text-xs font-medium ${categoryColors[distanceCategory]}`}>
@@ -381,18 +410,18 @@ const RideCard = ({ ride, index, onViewDetails }) => {
           </div>
         </div>
 
-        {/* Arrival Time */}
+        {/* Arrival Date */}
         <div className="flex items-start gap-3">
           <Clock className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-dark-500 text-xs">Arrival Time</p>
+            <p className="text-dark-500 text-xs">Arrival Date</p>
             <p className="text-dark-200">
-              {new Date(ride.arrival_time).toLocaleString('en-IN', {
+              {ride.arrival_date ? new Date(ride.arrival_date + 'T00:00:00').toLocaleDateString('en-IN', {
+                weekday: 'short',
+                year: 'numeric',
                 month: 'short',
                 day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              }) : 'N/A'}
             </p>
           </div>
         </div>
